@@ -1,7 +1,9 @@
 param(
 
     [ValidateSet('x86', 'x64', 'ARM', 'ARM64')]
-    [string[]] $Platforms = ('x86', 'x64', 'ARM', 'ARM64'),
+    [string[]] $Platforms = ('x64', 'x86', 'ARM', 'ARM64'),
+
+    [switch] $NoClean,
 
     <#
         Example values:
@@ -13,7 +15,7 @@ param(
 
         Note. The PlatformToolset will be inferred from this value ('v141', 'v142'...)
     #>
-    [version] $VcVersion = '14.1',
+    [version] $VcVersion = '14.2',
 
     <#
         Example values:
@@ -32,7 +34,7 @@ param(
     # Set the search criteria for VSWHERE.EXE.
     [string[]] $VsWhereCriteria = '-latest',
 
-    [System.IO.FileInfo] $Msys2Bin = 'C:\msys64\usr\bin\bash.exe'
+    [System.IO.FileInfo] $BashExe = "$env:windir\system32\bash.exe"
 )
 
 function Build-Platform {
@@ -44,7 +46,7 @@ function Build-Platform {
         [version] $VcVersion,
         [string] $PlatformToolset,
         [string] $VsLatestPath,
-        [string] $Msys2Bin = 'C:\msys64\usr\bin\bash.exe'
+        [string] $BashExe = "$env:windir\system32\bash.exe"
     )
 
     $PSBoundParameters | Out-String
@@ -104,19 +106,23 @@ function Build-Platform {
     $env:INCLUDE += ";${libs}\include"
     $env:Path += ";${SolutionDir}"
 
-    # Clean platform-specific build dir.
-    Remove-Item -Force -Recurse $libs\build\*
-    Remove-Item -Force -Recurse ${libs}\lib\*
-    Remove-Item -Force -Recurse ${libs}\include\*
+    if ($NoClean) {
+        $libdefs = @()
+    } else {
+        # Clean platform-specific build dir.
+        Remove-Item -Force -Recurse $libs\build\*
+        Remove-Item -Force -Recurse ${libs}\lib\*
+        Remove-Item -Force -Recurse ${libs}\include\*
 
-    # library definitions: <FolderName>, <ProjectName>, <FFmpegTargetName> 
-    $libdefs = @(
-        @('zlib', 'libzlib', 'zlib'),
-        @('bzip2', 'libbz2', 'bz2'),
-        @('libiconv', 'libiconv', 'iconv'),
-        @('liblzma', 'liblzma', 'lzma'),
-        @('libxml2', 'libxml2', 'libxml2')
+        # library definitions: <FolderName>, <ProjectName>, <FFmpegTargetName> 
+        $libdefs = @(
+            @('zlib', 'libzlib', 'zlib'),
+            @('bzip2', 'libbz2', 'bz2'),
+            @('libiconv', 'libiconv', 'iconv'),
+            @('liblzma', 'liblzma', 'lzma'),
+            @('libxml2', 'libxml2', 'libxml2')
         )
+    }
 
     # Build all libraries
     $libdefs | ForEach-Object {
@@ -156,15 +162,25 @@ function Build-Platform {
     # Export full current PATH from environment into MSYS2
     $env:MSYS2_PATH_TYPE = 'inherit'
 
+    $drive = (Get-Item (${PSScriptRoot})).PSDrive.Root
+    $match = subst.exe | Select-String "${drive}\:"
+    if ($match) {
+        $scriptRoot = $PSScriptRoot -replace "${drive}\", ($match.ToString().Substring('C:\: => '.Length) + '\')
+    } else {
+        $scriptRoot = $PSScriptRoot
+    }
+
+    $scriptRoot = & $BashExe -c "wslpath $($x -replace '\\','\\')"
+
     # Build ffmpeg - disable strict error handling since ffmpeg writes to error out
     $ErrorActionPreference = "Continue"
-    & $Msys2Bin --login -x $SolutionDir\FFmpegConfig.sh Win10 $Platform
+    & $BashExe --login -x $scriptRoot/FFmpegConfig.sh Win10 $Platform
     $ErrorActionPreference = "Stop"
 
     if ($lastexitcode -ne 0) { throw "Failed to build FFmpeg." }
 
     # Copy PDBs to built binaries dir
-    Copy-Item $SolutionDir\ffmpeg\Output\Windows10\$Platform\*.pdb $SolutionDir\ffmpeg\Build\Windows10\$Platform\bin\
+    Copy-Item $SolutionDir\ffmpeg\Output\Windows10\$Platform\*\*.pdb $SolutionDir\ffmpeg\Build\Windows10\$Platform\bin\
 }
 
 Write-Host
@@ -179,12 +195,12 @@ if (! (Test-Path $PSScriptRoot\ffmpeg\configure)) {
     Exit 1
 }
 
-if (!(Test-Path $Msys2Bin)) {
+if (!(Test-Path $BashExe)) {
 
     $msysFound = $false
     @( 'C:\msys64', 'C:\msys' ) | ForEach-Object {
         if (Test-Path $_) {
-            $Msys2Bin = "${_}\usr\bin\bash.exe"
+            $BashExe = "${_}\usr\bin\bash.exe"
             $msysFound = $true
 
             break
