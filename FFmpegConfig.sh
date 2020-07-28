@@ -7,9 +7,9 @@ arch['x64']='x86_64'
 arch['ARM']='arm'
 arch['ARM64']='arm64'
 
-platform=$1
+platform=$2
 
-configureArgs="\
+configureArgsOrig="\
     --toolchain=msvc \
     --disable-programs \
     --disable-d3d11va \
@@ -26,6 +26,31 @@ configureArgs="\
     --enable-lzma \
     --enable-libxml2 \
     --enable-iconv \
+    --arch=${arch[$platform]} \
+    --target-os=win32 \
+    --prefix=$DIR/ffmpeg/Build/Windows10/$platform
+"
+
+configureArgs="\
+    --toolchain=msvc \
+    --disable-all \
+    --disable-d3d11va \
+    --disable-muxers \
+    --disable-protocols \
+    --disable-doc \
+    --enable-shared \
+    --enable-cross-compile \
+    --enable-debug \
+    --enable-avcodec \
+    --disable-avdevice \
+    --enable-avfilter \
+    --enable-avformat \
+    --enable-swresample \
+    --disable-swscale \
+    --enable-decoder=adpcm_ima_qt \
+    --enable-demuxer=aiff \
+    --enable-demuxer=avi \
+    --extra-ldflags=-DEBUG:FULL \
     --arch=${arch[$platform]} \
     --target-os=win32 \
     --prefix=$DIR/ffmpeg/Build/Windows10/$platform
