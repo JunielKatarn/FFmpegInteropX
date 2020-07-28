@@ -73,7 +73,9 @@ function Build-Platform {
     # Load environment from VCVARS.
     $vcvarsArch = $vcvarsArchs[$env:PROCESSOR_ARCHITECTURE][$Platform]
 
-    CMD /c "`"$VsLatestPath\VC\Auxiliary\Build\vcvarsall.bat`" $vcvarsArch uwp $WindowsTargetPlatformVersion -vcvars_ver=$VcVersion && SET" | . {
+    #TODO:  Check whether to keep or remove 'uwp' =>
+    #       Missing LIBCMT.LIB in C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.26.28801\lib\x64\store
+    CMD /c "`"$VsLatestPath\VC\Auxiliary\Build\vcvarsall.bat`" $vcvarsArch $WindowsTargetPlatformVersion -vcvars_ver=$VcVersion && SET" | . {
         PROCESS {
             Write-Host $_
             if ($_ -match '^([^=]+)=(.*)') {
@@ -169,8 +171,7 @@ function Build-Platform {
     } else {
         $scriptRoot = $PSScriptRoot
     }
-
-    $scriptRoot = & $BashExe -c "wslpath $($x -replace '\\','\\')"
+    $scriptRoot = & $BashExe -c "wslpath -a $($scriptRoot -replace '\\','\\')"
 
     # Build ffmpeg - disable strict error handling since ffmpeg writes to error out
     $ErrorActionPreference = "Continue"
@@ -249,7 +250,7 @@ foreach ($platform in $Platforms) {
             -VcVersion $VcVersion `
             -PlatformToolset $platformToolSet `
             -VsLatestPath $vsLatestPath `
-            -Msys2Bin $Msys2Bin
+            -BashExe $BashExe
     }
     catch
     {
