@@ -50,6 +50,15 @@ configureArgs="\
     --enable-decoder=adpcm_ima_qt \
     --enable-demuxer=aiff \
     --enable-demuxer=avi \
+    \
+    --disable-manpages \
+    --disable-podpages \
+    --disable-network \
+    --disable-zlib \
+    --disable-schannel \
+    --disable-dxva2 \
+    --disable-swscale-alpha \
+    \
     --extra-ldflags=-DEBUG:FULL \
     --arch=${arch[$platform]} \
     --target-os=win32 \
