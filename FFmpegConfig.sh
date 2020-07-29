@@ -82,7 +82,7 @@ elif [ "$platform" == "x64" ]; then
 elif [ "$platform" == "ARM" ]; then
     configureArgs="\
         $configureArgs \
-            --as=armasm \
+            --as=armasm.exe \
             --cpu=armv7 \
             --extra-cflags='-MD -DWINAPI_FAMILY=WINAPI_FAMILY_APP -D_WIN32_WINNT=0x0A00 -DLZMA_API_STATIC -D__ARM_PCS_VFP' \
             --extra-ldflags='-APPCONTAINER WindowsApp.lib' \
@@ -91,7 +91,7 @@ elif [ "$platform" == "ARM" ]; then
 elif [ "$platform" == "ARM64" ]; then
     configureArgs="\
         $configureArgs \
-            --as=armasm64 \
+            --as=armasm64.exe \
             --cpu=armv8 \
             --extra-cflags='-MD -DWINAPI_FAMILY=WINAPI_FAMILY_APP -D_WIN32_WINNT=0x0A00 -DLZMA_API_STATIC -D__ARM_PCS_VFP' \
             --extra-ldflags='-APPCONTAINER WindowsApp.lib' \

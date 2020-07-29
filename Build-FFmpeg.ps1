@@ -52,6 +52,7 @@ function Build-Platform {
     $PSBoundParameters | Out-String
 
     $hostArch = ( 'x86', 'x64' )[ [System.Environment]::Is64BitOperatingSystem ]
+    $targetArch = $Platform.ToLower()
 
     Write-Host "Building FFmpeg for Windows 10 apps ${Platform}..."
     Write-Host ""
@@ -62,7 +63,7 @@ function Build-Platform {
     Enter-VsDevShell `
         -VsInstallPath $VsLatestPath `
         -StartInPath "$PWD" `
-        -DevCmdArguments "-arch=$Platform -host_arch=$hostArch -winsdk=$WindowsTargetPlatformVersion -vcvars_ver=$VcVersion -app_platform=UWP"
+        -DevCmdArguments "-arch=$targetArch -host_arch=$hostArch -winsdk=$WindowsTargetPlatformVersion -vcvars_ver=$VcVersion -app_platform=UWP"
 
 
     # Build pkg-config fake
