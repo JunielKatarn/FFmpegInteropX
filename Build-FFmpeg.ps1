@@ -51,42 +51,18 @@ function Build-Platform {
 
     $PSBoundParameters | Out-String
 
-    $vcvarsArchs = @{
-        'x86' = @{
-            'x86'   = 'x86'
-            'x64'   = 'x86_amd64'
-            'ARM'   = 'x86_arm'
-            'ARM64' = 'x86_arm64'
-        }
-    
-        'AMD64' = @{
-            'x86'   = 'amd64_x86'
-            'x64'   = 'amd64'
-            'ARM'   = 'amd64_arm'
-            'ARM64' = 'amd64_arm64'
-        }
-    }
+    $hostArch = ( 'x86', 'x64' )[ [System.Environment]::Is64BitOperatingSystem ]
 
     Write-Host "Building FFmpeg for Windows 10 apps ${Platform}..."
     Write-Host ""
     
     # Load environment from VCVARS.
-    $vcvarsArch = $vcvarsArchs[$env:PROCESSOR_ARCHITECTURE][$Platform]
+    Import-Module "$VsLatestPath\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
 
-    #TODO:  Check whether to keep or remove 'uwp' =>
-    #       Missing LIBCMT.LIB in C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.26.28801\lib\x64\store
-    CMD /c "`"$VsLatestPath\VC\Auxiliary\Build\vcvarsall.bat`" $vcvarsArch $WindowsTargetPlatformVersion -vcvars_ver=$VcVersion && SET" | . {
-        PROCESS {
-            Write-Host $_
-            if ($_ -match '^([^=]+)=(.*)') {
-                if ($Matches[1] -notin 'HOME') {
-                    Set-Item -Path "Env:\$($Matches[1])" -Value $Matches[2]
-                }
-            }
-        }
-    }
-
-    if ($lastexitcode -ne 0) { throw "Failed to configure vcvarsall environment." }
+    Enter-VsDevShell `
+        -VsInstallPath $VsLatestPath `
+        -StartInPath "$PWD" `
+        -DevCmdArguments "-arch=$Platform -host_arch=$hostArch -winsdk=$WindowsTargetPlatformVersion -vcvars_ver=$VcVersion -app_platform=UWP"
 
 
     # Build pkg-config fake

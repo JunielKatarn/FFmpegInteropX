@@ -58,28 +58,28 @@ configureArgs="\
     --disable-schannel \
     --disable-dxva2 \
     --disable-swscale-alpha \
+    --disable-runtime-cpudetect \
     \
-    --extra-ldflags=-DEBUG:FULL \
     --arch=${arch[$platform]} \
     --target-os=win32 \
     --prefix=$DIR/ffmpeg/Build/Windows10/$platform
 "
 
-if [ "$1" == "x86" ]; then
+if [ "$platform" == "x86" ]; then
     configureArgs="\
         $configureArgs \
             --extra-cflags='-MD -DWINAPI_FAMILY=WINAPI_FAMILY_APP -D_WIN32_WINNT=0x0A00 -DLZMA_API_STATIC' \
             --extra-ldflags='-APPCONTAINER WindowsApp.lib' \
 "
 
-elif [ "$1" == "x64" ]; then
+elif [ "$platform" == "x64" ]; then
     configureArgs="\
         $configureArgs \
             --extra-cflags='-MD -DWINAPI_FAMILY=WINAPI_FAMILY_APP -D_WIN32_WINNT=0x0A00 -DLZMA_API_STATIC' \
             --extra-ldflags='-APPCONTAINER WindowsApp.lib' \
 "
 
-elif [ "$1" == "ARM" ]; then
+elif [ "$platform" == "ARM" ]; then
     configureArgs="\
         $configureArgs \
             --as=armasm \
@@ -88,7 +88,7 @@ elif [ "$1" == "ARM" ]; then
             --extra-ldflags='-APPCONTAINER WindowsApp.lib' \
 "
 
-elif [ "$1" == "ARM64" ]; then
+elif [ "$platform" == "ARM64" ]; then
     configureArgs="\
         $configureArgs \
             --as=armasm64 \
