@@ -1470,7 +1470,9 @@ MediaSampleProvider^ FFmpegInteropMSS::CreateVideoSampleProvider(AVStream* avStr
 		{
 			hardwareDecoderStatus = HardwareDecoderStatus::NotAvailable;
 		}
+		#if defined(FFMPEGINTEROP_AVDEVICE) && defined(FFMPEGINTEROP_SWSCALE)
 		videoSampleProvider = ref new UncompressedVideoSampleProvider(m_pReader, avFormatCtx, avVideoCodecCtx, config, index, hardwareDecoderStatus);
+		#endif
 	}
 
 	auto hr = videoSampleProvider->Initialize();
